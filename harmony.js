@@ -80,8 +80,8 @@ const USER_SETTINGS = {
     {
       // ——— Group 3: Alternative TLS Configuration ———
       name: "| HAЯMOИY ᴱᴹˢ |",
-      host: "index.harmonica03.workers.dev",
-      sni: "index.harmonica03.workers.dev",
+      host: "index.harmonica01.workers.dev",
+      sni: "index.harmonica01.workers.dev",
       path: "/random:16?ed=2048", // Fixed path value optimized for xray core
       tls: true,
       allowInsecure: true,
@@ -181,6 +181,17 @@ addEventListener("fetch", (event) => {
  * @param {Request} _request - The incoming HTTP request
  * @returns {Promise<Response>} - Response containing base64-encoded VLESS links
  */
+
+async function fetchWithTimeout(url, ms = 3000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 async function handleRequest(_request) {
   const url = new URL(_request.url);
   const subNameParam = url.searchParams.get('name');
@@ -191,10 +202,10 @@ async function handleRequest(_request) {
   try {
     // Fetch dynamic IP lists from external sources
     const [ipv4listRE1, ipv4listRE2] = await Promise.all([
-      fetch(ipSourceURLs.dynamic1)
+      fetchWithTimeout(ipSourceURLs.dynamic1)
         .then((res) => res.json())
         .catch(() => ({ ipv4: [] })),
-      fetch(ipSourceURLs.dynamic2)
+      fetchWithTimeout(ipSourceURLs.dynamic2)
         .then((res) => res.json())
         .catch(() => ({ data: [] }))
     ]);
